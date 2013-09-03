@@ -519,6 +519,8 @@ window.Chart = function(context){
 			scaleShowGridLines : true,
 			scaleGridLineColor : "rgba(0,0,0,.05)",
 			scaleGridLineWidth : 1,
+			barShowLabel : false,
+			barLabelFormatter : function (s) { return s; },
 			barShowStroke : true,
 			barStrokeWidth : 2,
 			barValueSpacing : 5,
@@ -1430,14 +1432,15 @@ window.Chart = function(context){
 				//... wheras j is looping through the individual data points
 				for (var j=0; j<data.datasets[i].data.length; j++){
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
+					var barTop = xAxisPosY - animPc * calculateOffset(data.datasets[i].data[j], calculatedScale, scaleHop) + (config.barStrokeWidth / 2);
 					
 					ctx.beginPath();
 					//bottom left corner
 					ctx.moveTo(barOffset, xAxisPosY);
 					//top left corner
-					ctx.lineTo(barOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
+					ctx.lineTo(barOffset, barTop);
 					//top right corner
-					ctx.lineTo(barOffset + barWidth, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
+					ctx.lineTo(barOffset + barWidth, barTop);
 					//bottom right corner
 					ctx.lineTo(barOffset + barWidth, xAxisPosY);
 					if(config.barShowStroke){
@@ -1445,6 +1448,8 @@ window.Chart = function(context){
 					}
 					ctx.closePath();
 					ctx.fill();
+					if (config.barShowLabel)
+						ctx.fillText(config.barLabelFormatter(data.datasets[i].data[j]), barOffset + 10 + barWidth / 2, barTop - 12);
 					//This function was added by CY to support error bars			
 					if ( data.datasets[i].error ){
 						//draw the error bars
