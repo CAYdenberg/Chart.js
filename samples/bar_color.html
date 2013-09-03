@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Bar Chart with custom colors</title>
+		<script src="../Chart.js"></script>
+		<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
+		<style>
+			canvas{
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" height="450" width="600"></canvas>
+
+
+	<script>
+		var lineChartData = {
+			labels : ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100", "110"],
+			datasets : [
+				{
+					fillColor : function(dataValue,animationPercent){
+						// dataValue is the raw data value. Not guaranteed to be in any range,
+						// but luckily we have access to the raw data input just below this
+						// animationPercent is how far along in the animation we are.
+						// In case you want to vary the bar color with animation
+						// hue is [0,360]
+						var hue = Math.round(dataValue*animationPercent/40*360);
+						// saturation is [0,100]
+						var saturation = 100;
+						// lightness is [0,100]
+						var lightness = 50;
+						var color = "hsla("+hue+", "+saturation+"%, "+lightness+"%, 1)";
+						// Make sure to handle the case where one or both of them is NaN:
+						// this is a side-effect of the bar-with-errors update
+						if (isNaN(dataValue) || isNaN(animationPercent)) {
+							color = "hsla(0, 100%, 50%, 1)";
+						}
+						console.log(color);
+						return color;
+					},
+					strokeColor : "rgba(0,0,0,1)",
+					pointColor : "rgba(0,0,0,1)",
+					pointStrokeColor : "#fff",
+					data : [30.33, 29.33, 36.5, 29.5, 27.0]
+				},
+				
+			]
+			
+		}
+	
+		options = {
+			error: "range",
+			scaleOverride: true,
+			scaleStartValue: 0,
+			scaleSteps: 6,
+			scaleStepWidth: 50,
+			bezierCurve: false,
+			datasetFill: false,
+			connectingLine : true,
+			animation : true
+		}
+
+	var myLine = new ChartCalculator(document.getElementById("canvas").getContext("2d")).Bar(lineChartData, options);
+	
+	</script>
+	</body>
+</html>

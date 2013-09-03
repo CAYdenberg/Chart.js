@@ -767,7 +767,6 @@ window.Chart = function(context){
 				}
 				ctx.closePath();
 				
-				
 				ctx.fillStyle = data.datasets[i].fillColor;
 				ctx.strokeStyle = data.datasets[i].strokeColor;
 				ctx.lineWidth = config.datasetStrokeWidth;
@@ -1427,10 +1426,14 @@ window.Chart = function(context){
 			ctx.lineWidth = config.barStrokeWidth;
 			//i is looping through the datasets ...
 			for (var i=0; i<data.datasets.length; i++){
-					ctx.fillStyle = data.datasets[i].fillColor;
 					ctx.strokeStyle = data.datasets[i].strokeColor;
 				//... wheras j is looping through the individual data points
 				for (var j=0; j<data.datasets[i].data.length; j++){
+					if (typeof data.datasets[i].fillColor == "function") {
+						ctx.fillStyle = data.datasets[i].fillColor(data.datasets[i].data[j],animPc);
+					} else {
+						ctx.fillStyle = data.datasets[i].fillColor;
+					}
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
 					var barTop = xAxisPosY - animPc * calculateOffset(data.datasets[i].data[j], calculatedScale, scaleHop) + (config.barStrokeWidth / 2);
 					
@@ -1490,7 +1493,7 @@ window.Chart = function(context){
 					ctx.lineTo(barOffset + barWidth, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][1],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
 					ctx.closePath();
 					ctx.stroke();
-					if(config.barFillColor){
+					if(config.datasetFill){
 						ctx.fill();
 					}
 					//draw the median crossling line
