@@ -497,12 +497,11 @@ window.Chart = function(context){
 	this.Bar = function(data,options){
 		chart.Bar.defaults = {
 			chartType : "Bar",
-			//stroke width of the error bars
+			//error bars
 			errorStrokeWidth : 5,
-			//stroke color of the error bars 
 			errorStrokeColor : "#333",
-			//cap width of the error bars relative to bar width
 			errorCapWidth : 0.75,
+			// scale 
 			scaleOverlay : false,
 			scaleOverride : false,
 			scaleSteps : null,
@@ -510,30 +509,40 @@ window.Chart = function(context){
 			scaleStartValue : null,
 			scaleLineColor : "rgba(0,0,0,.1)",
 			scaleLineWidth : 1,
+			// scale labels
 			scaleShowLabels : true,
 			scaleLabel : "<%=value%>",
 			scaleFontFamily : "'Arial'",
 			scaleFontSize : 12,
 			scaleFontStyle : "normal",
 			scaleFontColor : "#666",
+			// scale grid lines
 			scaleShowGridLines : true,
 			scaleGridLineColor : "rgba(0,0,0,.05)",
 			scaleGridLineWidth : 1,
-			barShowLabel : false,
+			// bar labels
+			barShowLabels : false,
 			barLabelFormatter : function (s) { return s; },
+			barLabelFontFamily : "'Arial'",
+			barLabelFontSize : 12,
+			barLabelFontStyle : "normal",
+			barLabelFontColor : "#666",
+			// bar stroke
 			barShowStroke : true,
 			barStrokeWidth : 2,
+			// bar spacing
 			barValueSpacing : 5,
 			barDatasetSpacing : 1,
+			// animation
 			animation : true,
 			animationSteps : 60,
 			animationEasing : "easeOutQuart",
 			onAnimationComplete : null
-		};		
+		};
 		var config = (options) ? mergeChartConfig(chart.Bar.defaults,options) : chart.Bar.defaults;
 		
 		return new Bar(data,config,context);
-				
+		
 	}
 	
 	//ADDED by CY. Box plots seperate the data into 4 quartiles, which are represented
@@ -1429,6 +1438,7 @@ window.Chart = function(context){
 					ctx.strokeStyle = data.datasets[i].strokeColor;
 				//... wheras j is looping through the individual data points
 				for (var j=0; j<data.datasets[i].data.length; j++){
+					ctx.save();
 					if (typeof data.datasets[i].fillColor == "function") {
 						ctx.fillStyle = data.datasets[i].fillColor(data.datasets[i].data[j],animPc);
 					} else {
@@ -1451,9 +1461,23 @@ window.Chart = function(context){
 					}
 					ctx.closePath();
 					ctx.fill();
-					if (config.barShowLabel)
-						ctx.fillText(config.barLabelFormatter(data.datasets[i].data[j]), barOffset + 10 + barWidth / 2, barTop - 12);
-					//This function was added by CY to support error bars			
+					ctx.restore();
+					if (config.barShowLabels) {
+						ctx.save();
+						ctx.textAlign = "center";
+						ctx.font = config.barLabelFontStyle + " " + config.barLabelFontSize + "px " + config.barLabelFontFamily;
+						var label = config.barLabelFormatter(data.datasets[i].data[j]);
+						var textWidth = ctx.measureText(label).width;
+						ctx.textBaseline = "bottom";
+						// fill style falls back to bar fill style if custom color is invalid.
+						// ASK should it instead fall back to default?
+						ctx.fillStyle = config.barLabelFontColor;
+						
+						ctx.fillText(label, barOffset + barWidth / 2, barTop - 4);
+						// 	ctx.fillText(label,width/2,height/2 - (scaleHop * (i + 1)));
+						ctx.restore();
+					}
+					//This function was added by CY to support error bars
 					if ( data.datasets[i].error ){
 						//draw the error bars
 						ctx.strokeStyle = config.errorStrokeWidth;

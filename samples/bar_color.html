@@ -35,7 +35,6 @@
 						if (isNaN(dataValue) || isNaN(animationPercent)) {
 							color = "hsla(0, 100%, 50%, 1)";
 						}
-						console.log(color);
 						return color;
 					},
 					strokeColor : "rgba(0,0,0,1)",
@@ -49,18 +48,17 @@
 		}
 	
 		options = {
-			error: "range",
-			scaleOverride: true,
-			scaleStartValue: 0,
-			scaleSteps: 6,
-			scaleStepWidth: 50,
-			bezierCurve: false,
-			datasetFill: false,
-			connectingLine : true,
-			animation : true
+			barShowLabels : true,
+			barLabelFontFamily : "'Georgia'",
+			barLabelFontColor : "#ff0000",
+			barLabelFontStyle : "italic",
+			barLabelFontSize : "16",
+			barLabelFormatter : function(string) {
+				return string;
+			}
 		}
 
-	var myLine = new ChartCalculator(document.getElementById("canvas").getContext("2d")).Bar(lineChartData, options);
+	var myLine = new Chart(document.getElementById("canvas").getContext("2d")).Bar(lineChartData, options);
 	
 	</script>
 	</body>
