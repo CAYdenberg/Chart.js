@@ -1439,11 +1439,22 @@ window.Chart = function(context){
 				//... wheras j is looping through the individual data points
 				for (var j=0; j<data.datasets[i].data.length; j++){
 					ctx.save();
-					if (typeof data.datasets[i].fillColor == "function") {
+					
+					var fillColor = data.datasets[i].fillColor;
+					if (typeof fillColor == "string") {
+						ctx.fillStyle = fillColor;
+					} else if (typeof data.datasets[i].fillColor == "function") {
 						ctx.fillStyle = data.datasets[i].fillColor(data.datasets[i].data[j],animPc);
-					} else {
-						ctx.fillStyle = data.datasets[i].fillColor;
+					} else if (typeof data.datasets[i].fillColor == "object") {
+						// assume it's an array
+						// cycle through it
+						try {
+							ctx.fillStyle = fillColor[j%fillColor.length];
+						} catch (error) {
+							// will fall back to default ctx fill style
+						}
 					}
+					
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
 					var barTop = xAxisPosY - animPc * calculateOffset(data.datasets[i].data[j], calculatedScale, scaleHop) + (config.barStrokeWidth / 2);
 					
