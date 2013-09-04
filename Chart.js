@@ -555,7 +555,7 @@ window.Chart = function(context){
 			chartType : "Box",
 			//if false, whiskerWidth is the same as barWidth
 			whiskerWidth : false,
-			
+			// scale
 			scaleOverlay : false,
 			scaleOverride : false,
 			scaleSteps : null,
@@ -563,19 +563,31 @@ window.Chart = function(context){
 			scaleStartValue : null,
 			scaleLineColor : "rgba(0,0,0,.1)",
 			scaleLineWidth : 1,
+			// scale labels
 			scaleShowLabels : true,
 			scaleLabel : "<%=value%>",
 			scaleFontFamily : "'Arial'",
 			scaleFontSize : 12,
 			scaleFontStyle : "normal",
 			scaleFontColor : "#666",
+			// scale grid lines
 			scaleShowGridLines : true,
 			scaleGridLineColor : "rgba(0,0,0,.05)",
 			scaleGridLineWidth : 1,
+			// bar labels
+			barShowLabels : false,
+			barLabelFormatter : function (s) { return s; },
+			barLabelFontFamily : "'Arial'",
+			barLabelFontSize : 12,
+			barLabelFontStyle : "normal",
+			barLabelFontColor : "#666",
+			// bar stroke
 			barShowStroke : true,
 			barStrokeWidth : 5,
+			// bar spacing
 			barValueSpacing : 5,
 			barDatasetSpacing : 0,
+			// animation
 			animation : true,
 			animationSteps : 60,
 			animationEasing : "easeOutQuart",
@@ -1429,6 +1441,26 @@ window.Chart = function(context){
 		} else {
 			animationLoop(config,drawScale,drawBars,ctx);
 		}
+    
+		// This function returns the fill color found in an object of variable type
+		// If functionOrObject is a string, returns the string's value
+		// 
+		var getFillColor = function(functionOrObject, index, dataValue, animationPercent) {
+			if (typeof functionOrObject == "string") {
+				return functionOrObject;
+			} else if (typeof functionOrObject == "function") {
+				return functionOrObject(dataValue, animationPercent);
+			} else if (Object.prototype.toString.call( functionOrObject ) === '[object Array]') {
+				// cycle through it
+				// recurse in case each element is a function, or subarray?
+				return getFillColor(functionOrObject[index%functionOrObject.length], index, dataValue, animationPercent);
+			} else {
+				if (this.console) {
+					console.log("could not read fill color function, returning #000000");
+				}
+				return "#000000";
+			}
+		}
 		//arg animPc is the fraction-complete of the animation - ie
 		//it has a value of 1 for the final chart
 		function drawBars(animPc){
@@ -1440,20 +1472,7 @@ window.Chart = function(context){
 				for (var j=0; j<data.datasets[i].data.length; j++){
 					ctx.save();
 					
-					var fillColor = data.datasets[i].fillColor;
-					if (typeof fillColor == "string") {
-						ctx.fillStyle = fillColor;
-					} else if (typeof data.datasets[i].fillColor == "function") {
-						ctx.fillStyle = data.datasets[i].fillColor(data.datasets[i].data[j],animPc);
-					} else if (typeof data.datasets[i].fillColor == "object") {
-						// assume it's an array
-						// cycle through it
-						try {
-							ctx.fillStyle = fillColor[j%fillColor.length];
-						} catch (error) {
-							// will fall back to default ctx fill style
-						}
-					}
+					ctx.fillStyle = getFillColor(data.datasets[i].fillColor, j, data.datasets[i].data[j], animPc);
 					
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
 					var barTop = xAxisPosY - animPc * calculateOffset(data.datasets[i].data[j], calculatedScale, scaleHop) + (config.barStrokeWidth / 2);
@@ -1512,10 +1531,11 @@ window.Chart = function(context){
 			ctx.lineWidth = config.barStrokeWidth;
 			//i is looping through the datasets ...
 			for (var i=0; i<data.datasets.length; i++){
-				ctx.fillStyle = data.datasets[i].fillColor;
 				ctx.strokeStyle = data.datasets[i].strokeColor;
 				//... wheras j is looping through the individual data points
 				for (var j=0; j<data.datasets[i].data.length; j++){
+					ctx.fillStyle = getFillColor(data.datasets[i].fillColor, j, data.datasets[i].data[j], animPc);
+					
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
 					ctx.beginPath();
 					//bottom left corner
