@@ -44,9 +44,15 @@ CAYdenberg:
 > using the chart calculator, and pass the entire population as an array. Alternatively, 
 > the "breakpoints" of each quartiles can be passed in the data object as [q0, q1, q2, q3, q4]
 
+spilliams:
+
+> The standard usage of box-and-whisker plots arranges data into the 4 quartiles. If any outliers are present in the standard data set, they **are included** in the box and/or whiskers.
+> If you wish to introduce outliers separate from that dataset, provide them in an `outliers` option of the dataset. You may style them using configuration options. See the demo for code samples.
+> (This allows "outliers" to be placed inside the box, in order to compare, for instance, one particular student's score next to the distribution of the rest of the class)
+
 ### scatter charts
 
-A new chart type, implemented as a child of Line charts. 
+A new chart type, implemented as a child of Line charts.
 
 CAYdenberg:
 

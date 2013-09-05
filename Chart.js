@@ -571,7 +571,19 @@ window.Chart = function(context){
 			animation : true,
 			animationSteps : 60,
 			animationEasing : "easeOutQuart",
-			onAnimationComplete : null
+			onAnimationComplete : null,
+			// outliers
+			outlierShowLabels : true,
+			outlierLabelFormatter : function(s){return s;},
+			outlierLabelFontFamily : "'Arial'",
+			outlierLabelFontStyle : "normal",
+			outlierLabelFontSize : 12,        // pixels
+			outlierLabelFontColor : "#666",
+			outlierLabelPlacement : "right",  // left, top, bottom
+			outlierLabelMargin : 2,           // pixels. between label and dot
+			outlierDotRadius : 2,             // pixels
+			outlierDotStrokeWidth : 2,        // pixels
+			outlierDotStrokeColor : "#666",
 		};
 		var config = (options) ? mergeChartConfig(chart.Bar.defaults,options) : chart.Bar.defaults;
 		
@@ -1588,6 +1600,58 @@ window.Chart = function(context){
 						label = config.barLabelFormatter(data.datasets[i].data[j][(config.showWhiskers ? 4 : 3)]);
 						ctx.fillText(label, barOffset + barWidth / 2, topLabelY);
 						
+						ctx.restore();
+					}
+					
+					// draw outlier dots & labels
+					if (data.datasets[i].outliers !== undefined &&
+							data.datasets[i].outliers[j] !== undefined) {
+						ctx.save();
+						ctx.strokeStyle = config.outlierDotStrokeColor;
+						
+						for (var k=0; k<data.datasets[i].outliers[j].length; k++) {
+							var outlier = data.datasets[i].outliers[j][k];
+							var outlierDotX = centerX;
+							var outlierDotY = xAxisPosY - animPc*calculateOffset(outlier,calculatedScale,scaleHop)+(config.barStrokeWidth/2);
+							ctx.beginPath();
+							ctx.arc(outlierDotX, outlierDotY, config.outlierDotRadius, 0, Math.PI*2);
+							ctx.stroke();
+							
+							if (config.outlierShowLabels) {
+								var outlierLabelX, outlierLabelY;
+								var outlierLabelDotGap = config.outlierDotRadius + config.outlierDotStrokeWidth + config.outlierLabelMargin;
+								switch(config.outlierLabelPlacement) {
+									case "right":
+										ctx.textAlign = "left";
+										ctx.textBaseline = "center";
+										outlierLabelX = outlierDotX + outlierLabelDotGap;
+										outlierLabelY = outlierDotY;
+										break;
+									case "left":
+										ctx.textAlign = "right";
+										ctx.textBaseline = "center";
+										outlierLabelX = outlierDotX - outlierLabelDotGap;
+										outlierLabelY = outlierDotY;
+										break;
+									case "top":
+										ctx.textAlign = "center";
+										ctx.textBaseline = "bottom";
+										outlierLabelX = outlierDotX;
+										outlierLabelY = outlierDotY - outlierLabelDotGap;
+										break;
+									case "bottom":
+										ctx.textAlign = "center";
+										ctx.textBaseline = "top";
+										outlierLabelX = outlierDotX;
+										outlierLabelY = outlierDotY + outlierLabelDotGap;
+										break;
+								}
+								ctx.font = config.outlierLabelFontStyle + " " + config.outlierLabelFontSize + "px" + config.outlierLabelFontFamily;
+								ctx.fillStyle = config.outlierLabelFontColor;
+								var label = config.outlierLabelFormatter(outlier);
+								ctx.fillText(label, outlierLabelX, outlierLabelY);
+							}
+						}
 						ctx.restore();
 					}
 				}
