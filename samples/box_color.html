@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Box plot</title>
+		<title>Box plot with color and labels</title>
 		<script src="../Chart.js"></script>
 		<meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
 		<style>
@@ -22,7 +22,7 @@
 					fillColor : function(dataValue, animationPercent) {
 					  return "rgba(255,0,0,1)";
 					},
-					strokeColor : "transparent",
+					strokeColor : "rgba(255,0,0,1)",
 					pointColor : "rgba(0,0,0,1)",
 					pointStrokeColor : "#fff",
 					data : [
@@ -35,7 +35,7 @@
 						[18.5, 24.665, 30.5, 43.665, 33.25, 48, 46.25, 18.665, 18.75, 48, 24.5, 52.33, 30, 57, 20.25, 29.25, 11.5, 24.75, 17, 26.5, 19.75, 16.25, 10.25, 20.25, 38, 22.25, 17.25, 33.5, 38.5, 22, 19.5, 23, 30.75, 29.25, 21, 19.5, 31.75, 24.25, 17.5, 28.75, 22.75, 23.25, 31.75, 20.75, 25.25, 25.5, 16.75, 20.5, 17.5, 29, 23, 18, 48.5, 58.5, 28.5, 32.25, 20.25, 21.75, 21.5, 40.25, 26, 20, 18.75, 25.25, 38.25, 22.5, 27.5, 24.25, 20.75, 27.5, 26.25, 33.25, 23.75, 27.25],
 						[12.25, 31, 15.25, 24, 10.75, 44.5, 11.5, 22.5, 19.25, 23, 31.5, 29, 19, 18.75, 17, 21.25, 27.5, 25.25, 19.25, 26.25, 14.5, 14.5, 12.75, 30.75, 13.5, 27.5, 14.25, 15.75, 13, 21.75, 64.75, 18.5, 20, 17.75, 22.5, 14.5, 29.33, 14.665, 16.33, 21.33, 26, 15.665, 21, 20.33, 19.75, 25.25, 49.25, 19.25, 16, 19, 14.5, 18.5, 16.75, 17.25, 16.25, 21.5, 20, 20.25, 22.25, 57.5, 41.25, 24, 26.75]
 					]
-				},		
+				},
 			]
 		}
 	
@@ -46,7 +46,8 @@
 			scaleSteps: 6,
 			scaleStepWidth: 10,
 			bezierCurve: false,
-      barShowLabels : true,
+			barShowLabels : true,
+			showWhiskers : false,
 			datasetFill: true,
 			connectingLine : true,
 			animation : true

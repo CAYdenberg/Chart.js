@@ -554,6 +554,7 @@ window.Chart = function(context){
 			//new variables added by CY
 			chartType : "Box",
 			//if false, whiskerWidth is the same as barWidth
+			showWhiskers : true,
 			whiskerWidth : false,
 			// scale
 			scaleOverlay : false,
@@ -1444,7 +1445,11 @@ window.Chart = function(context){
     
 		// This function returns the fill color found in an object of variable type
 		// If functionOrObject is a string, returns the string's value
-		// 
+		// If functionOrObject is an array, uses nth element of array and recurses
+		//   (where n is index modulo length)
+		// If functionOrObject is a function, runs the function and returns its
+		//   return value. This enables bars to change color as the animation
+		//   continues.
 		var getFillColor = function(functionOrObject, index, dataValue, animationPercent) {
 			if (typeof functionOrObject == "string") {
 				return functionOrObject;
@@ -1497,14 +1502,9 @@ window.Chart = function(context){
 						ctx.textAlign = "center";
 						ctx.font = config.barLabelFontStyle + " " + config.barLabelFontSize + "px " + config.barLabelFontFamily;
 						var label = config.barLabelFormatter(data.datasets[i].data[j]);
-						var textWidth = ctx.measureText(label).width;
 						ctx.textBaseline = "bottom";
-						// fill style falls back to bar fill style if custom color is invalid.
-						// ASK should it instead fall back to default?
 						ctx.fillStyle = config.barLabelFontColor;
-						
 						ctx.fillText(label, barOffset + barWidth / 2, barTop - 4);
-						// 	ctx.fillText(label,width/2,height/2 - (scaleHop * (i + 1)));
 						ctx.restore();
 					}
 					//This function was added by CY to support error bars
@@ -1538,44 +1538,79 @@ window.Chart = function(context){
 					
 					var barOffset = yAxisPosX + config.barValueSpacing + valueHop*j + barWidth*i + config.barDatasetSpacing*i + config.barStrokeWidth*i;
 					ctx.beginPath();
-					//bottom left corner
-					ctx.moveTo(barOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][1],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					//top left corner
-					ctx.lineTo(barOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][3],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					//top right corner
-					ctx.lineTo(barOffset + barWidth, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][3],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					//bottom right corner
-					ctx.lineTo(barOffset + barWidth, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][1],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
+					
+					// reusable values of grid features
+					var wis = (config.whiskerWidth * barWidth) || 1;
+					wisOffset = (barWidth - wis)/2;
+					var leftX   = barOffset;
+					var centerX = barOffset + barWidth/2;
+					var rightX  = barOffset + barWidth;
+					var whiskerMinX = barOffset + wisOffset;
+					var whiskerMaxX = barOffset + barWidth - wisOffset;
+					var getYForIndex = (function(index){ return xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][index],calculatedScale,scaleHop)+(config.barStrokeWidth/2); });
+					var minY    = getYForIndex(0);
+					var bottomY = getYForIndex(1);
+					var medianY = getYForIndex(2);
+					var topY    = getYForIndex(3);
+					var maxY    = getYForIndex(4);
+					
+					// box
+					ctx.moveTo(leftX, bottomY);
+					ctx.lineTo(leftX, topY);
+					ctx.lineTo(rightX, topY);
+					ctx.lineTo(rightX, bottomY);
 					ctx.closePath();
 					ctx.stroke();
 					if(config.datasetFill){
 						ctx.fill();
 					}
-					//draw the median crossling line
+					//draw the median line
 					ctx.beginPath();
-					ctx.moveTo(barOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][2],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.lineTo(barOffset + barWidth, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][2],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
+					ctx.moveTo(leftX, medianY);
+					ctx.lineTo(rightX, medianY);
 					ctx.stroke();
-					//draw the lower whisker
-					var wis = (config.whiskerWidth * barWidth) || 1;
-					wisOffset = (barWidth - wis)/2;
-					ctx.beginPath();
-					ctx.moveTo(barOffset + barWidth/2, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][0],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.lineTo(barOffset + barWidth/2, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][1],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.stroke();
-					ctx.beginPath();
-					ctx.moveTo(barOffset + wisOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][0],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.lineTo(barOffset + barWidth - wisOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][0],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.stroke();
-					//draw the upper whisker
-					ctx.beginPath();
-					ctx.moveTo(barOffset + barWidth/2, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][3],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.lineTo(barOffset + barWidth/2, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][4],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.stroke();
-					ctx.beginPath();
-					ctx.moveTo(barOffset + wisOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][4],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.lineTo(barOffset + barWidth - wisOffset, xAxisPosY - animPc*calculateOffset(data.datasets[i].data[j][4],calculatedScale,scaleHop)+(config.barStrokeWidth/2));
-					ctx.stroke();
+					
+					if (config.showWhiskers) {
+						//draw the lower whisker
+						ctx.beginPath();
+						ctx.moveTo(centerX, minY);
+						ctx.lineTo(centerX, bottomY);
+						ctx.stroke();
+						ctx.beginPath();
+						ctx.moveTo(whiskerMinX, minY);
+						ctx.lineTo(whiskerMaxX, minY);
+						ctx.stroke();
+						//draw the upper whisker
+						ctx.beginPath();
+						ctx.moveTo(centerX, topY);
+						ctx.lineTo(centerX, maxY);
+						ctx.stroke();
+						ctx.beginPath();
+						ctx.moveTo(whiskerMinX, maxY);
+						ctx.lineTo(whiskerMaxX, maxY);
+						ctx.stroke();
+					}
+					
+					if (config.barShowLabels) {
+						ctx.save(); // we're going to be messing with font settings
+						
+						ctx.textAlign = "center";
+						ctx.font = config.barLabelFontStyle + " " + config.barLabelFontSize + "px " + config.barLabelFontFamily;
+						ctx.fillStyle = config.barLabelFontColor;
+						
+						var bottomLabelY = (config.showWhiskers ? minY : bottomY) + 2;
+						var topLabelY = (config.showWhiskers ? maxY : topY) - 2;
+						
+						ctx.textBaseline = "top";
+						var label = config.barLabelFormatter(data.datasets[i].data[j][(config.showWhiskers ? 0 : 1)]);
+						ctx.fillText(label, barOffset + barWidth / 2, bottomLabelY);
+						
+						ctx.textBaseline = "bottom";
+						label = config.barLabelFormatter(data.datasets[i].data[j][(config.showWhiskers ? 4 : 3)]);
+						ctx.fillText(label, barOffset + barWidth / 2, topLabelY);
+						
+						ctx.restore();
+					}
 				}
 			}
 		}
@@ -1664,13 +1699,13 @@ window.Chart = function(context){
 				longestText +=10;
 			}
 			xAxisLength = width - longestText - widestXLabel;
-			valueHop = Math.floor(xAxisLength/(data.labels.length));	
+			valueHop = Math.floor(xAxisLength/(data.labels.length));
 			
 			barWidth = (valueHop - config.scaleGridLineWidth*2 - (config.barValueSpacing*2) - (config.barDatasetSpacing*data.datasets.length-1) - ((config.barStrokeWidth/2)*data.datasets.length-1))/data.datasets.length;
 			
 			yAxisPosX = width-widestXLabel/2-xAxisLength;
-			xAxisPosY = scaleHeight + config.scaleFontSize/2;				
-		}		
+			xAxisPosY = scaleHeight + config.scaleFontSize/2;
+		}
 		function calculateDrawingSizes(){
 			maxSize = height;
 
@@ -1709,7 +1744,7 @@ window.Chart = function(context){
 			
 			//Then get the area above we can safely draw on.
 			
-		}		
+		}
 		function getValueBounds() {
 			var upperValue = Number.MIN_VALUE;
 			var lowerValue = Number.MAX_VALUE;
