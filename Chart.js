@@ -287,7 +287,7 @@ window.Chart = function(context){
 		
 		return new PolarArea(data,config,context);
 	};
-
+	
 	this.Radar = function(data,options){
 	
 		chart.Radar.defaults = {
@@ -371,19 +371,14 @@ window.Chart = function(context){
 		return new Doughnut(data,config,context);			
 		
 	};
-
-	//MODIFIED by CY. Now supports error bars. This is still a "line graph" in the 
-	//traditional sense: X points are not supplied directly, but instead the x-axis
-	//represents a series of categories that are evenly spaced.
+	
 	this.Line = function(data,options){
 	
 		chart.Line.defaults = {
 			chartType: "Line",
-			//added by CY
 			errorStrokeWidth : 1,
 			errorStrokeColor : "#333",
 			errorCapWidth : 2,
-			
 			scaleOverlay : false,
 			scaleOverride : false,
 			scaleSteps : null,
@@ -400,14 +395,12 @@ window.Chart = function(context){
 			scaleShowGridLines : true,
 			scaleGridLineColor : "rgba(0,0,0,.05)",
 			scaleGridLineWidth : 1,
-			//changed bezierCurve option default to false
 			bezierCurve : false,
 			pointDot : true,
 			pointDotRadius : 4,
 			pointDotStrokeWidth : 2,
 			datasetStroke : true,
 			datasetStrokeWidth : 2,
-			//changed dataset fill default option to false
 			datasetFill : false,
 			animation : true,
 			animationSteps : 60,
@@ -419,13 +412,6 @@ window.Chart = function(context){
 		return new Line(data,config,context);
 	}
 	
-	
-	//ADDED by CY. This is a scatter plot as a opposed to a line graph. X and Y data is 
-	//supplied seperately as two different arrays: xVal : [] and data : []. These arrays 
-	//should therefore be the same length. Labels (values on the x-axis) can now be supplied
-	//seperately from the actual data. Alternatively, the axis can be specified by the xScale
-	//information in the options.
-
 	this.Scatter = function(data,options){
 	
 		chart.Line.defaults = {
@@ -492,8 +478,6 @@ window.Chart = function(context){
 		return new Line(data,config,context);
 	}
 	
-	//MODIFIED by CY. Now supports error bars, either supplied directly or calculated via
-	//the ChartCalculator. 
 	this.Bar = function(data,options){
 		chart.Bar.defaults = {
 			chartType : "Bar",
@@ -545,16 +529,11 @@ window.Chart = function(context){
 		
 	}
 	
-	//ADDED by CY. Box plots seperate the data into 4 quartiles, which are represented
-	//in a "box-and-whisker" arrangement. The best way to calculate the quartiles is by 
-	//using the chart calculator, and pass the entire population as an array. Alternatively, 
-	//the "breakpoints" of each quartiles can be passed in the data object as [q0, q1, q2, q3, q4]
 	this.Box = function(data,options){
 		chart.Bar.defaults = {
-			//new variables added by CY
 			chartType : "Box",
-			//if false, whiskerWidth is the same as barWidth
 			showWhiskers : true,
+			//if false, whiskerWidth is the same as barWidth
 			whiskerWidth : false,
 			// scale
 			scaleOverlay : false,
@@ -1027,8 +1006,8 @@ window.Chart = function(context){
 					ctx.stroke();
 				}
 				cumulativeAngle += segmentAngle;
-			}			
-		}				
+			}
+		}
 	}
 	
 	var Line = function(data,config,ctx){
@@ -1450,7 +1429,7 @@ window.Chart = function(context){
 		// If functionOrObject is a function, runs the function and returns its
 		//   return value. This enables bars to change color as the animation
 		//   continues.
-		var getFillColor = function(functionOrObject, index, dataValue, animationPercent) {
+		var getFillColor = (function(functionOrObject, index, dataValue, animationPercent) {
 			if (typeof functionOrObject == "string") {
 				return functionOrObject;
 			} else if (typeof functionOrObject == "function") {
@@ -1465,7 +1444,8 @@ window.Chart = function(context){
 				}
 				return "#000000";
 			}
-		}
+		});
+		
 		//arg animPc is the fraction-complete of the animation - ie
 		//it has a value of 1 for the final chart
 		function drawBars(animPc){
@@ -1507,7 +1487,7 @@ window.Chart = function(context){
 						ctx.fillText(label, barOffset + barWidth / 2, barTop - 4);
 						ctx.restore();
 					}
-					//This function was added by CY to support error bars
+					
 					if ( data.datasets[i].error ){
 						//draw the error bars
 						ctx.strokeStyle = config.errorStrokeWidth;
@@ -1526,7 +1506,6 @@ window.Chart = function(context){
 			}
 		}
 		
-		//This function was added by CY to draw Box Plots
 		function drawBoxes(animPc) {
 			ctx.lineWidth = config.barStrokeWidth;
 			//i is looping through the datasets ...
@@ -1830,61 +1809,49 @@ window.Chart = function(context){
 	})();
 
 	function calculateScale(drawingHeight,maxSteps,minSteps,maxValue,minValue,labelTemplateString){
-			var graphMin,graphMax,graphRange,stepValue,numberOfSteps,valueRange,rangeOrderOfMagnitude,decimalNum;
-			
-			valueRange = maxValue - minValue;
-			
-			rangeOrderOfMagnitude = calculateOrderOfMagnitude(valueRange);
-
-					graphMin = Math.floor(minValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
-						
-						graphMax = Math.ceil(maxValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
-						
-						graphRange = graphMax - graphMin;
-						
-						stepValue = Math.pow(10, rangeOrderOfMagnitude);
-						
-					numberOfSteps = Math.round(graphRange / stepValue);
-					
-					//Compare number of steps to the max and min for that size graph, and add in half steps if need be.					
-					while(numberOfSteps < minSteps || numberOfSteps > maxSteps) {
-						if (numberOfSteps < minSteps){
-							stepValue /= 2;
-							numberOfSteps = Math.round(graphRange/stepValue);
-						}
-						else{
-							stepValue *=2;
-							numberOfSteps = Math.round(graphRange/stepValue);
-						}
-					};
-
-					var labels = [];
-					populateLabels(labelTemplateString, labels, numberOfSteps, graphMin, stepValue);
+		var graphMin,graphMax,graphRange,stepValue,numberOfSteps,valueRange,rangeOrderOfMagnitude,decimalNum;
 		
-					return {
-						steps : numberOfSteps,
-				stepValue : stepValue,
-				graphMin : graphMin,
-				labels : labels						
-						
-					}
+		valueRange = maxValue - minValue;
 		
-			function calculateOrderOfMagnitude(val){
-				return Math.floor(Math.log(val) / Math.LN10);
-			}		
+		rangeOrderOfMagnitude = Math.floor(Math.log(valueRange) / Math.LN10);
+		graphMin = Math.floor(minValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
+		graphMax = Math.ceil(maxValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
+		graphRange = graphMax - graphMin;
+		stepValue = Math.pow(10, rangeOrderOfMagnitude);
+		numberOfSteps = Math.round(graphRange / stepValue);
+		
+		//Compare number of steps to the max and min for that size graph, and add in half steps if need be.
+		while(numberOfSteps < minSteps || numberOfSteps > maxSteps) {
+			if (numberOfSteps < minSteps){
+				stepValue /= 2;
+				numberOfSteps = Math.round(graphRange/stepValue);
+			}
+			else{
+				stepValue *=2;
+				numberOfSteps = Math.round(graphRange/stepValue);
+			}
+		};
 
-
+		var labels = [];
+		populateLabels(labelTemplateString, labels, numberOfSteps, graphMin, stepValue);
+	
+		return {
+			steps : numberOfSteps,
+			stepValue : stepValue,
+			graphMin : graphMin,
+			labels : labels
+		}
 	}
 
-		//Populate an array of all the labels by interpolating the string.
-		function populateLabels(labelTemplateString, labels, numberOfSteps, graphMin, stepValue) {
-				if (labelTemplateString) {
-						//Fix floating point errors by setting to fixed the on the same decimal as the stepValue.
-						for (var i = 1; i < numberOfSteps + 1; i++) {
-								labels.push(tmpl(labelTemplateString, {value: (graphMin + (stepValue * i)).toFixed(getDecimalPlaces(stepValue))}));
-						}
-				}
+	//Populate an array of all the labels by interpolating the string.
+	function populateLabels(labelTemplateString, labels, numberOfSteps, graphMin, stepValue) {
+		if (labelTemplateString) {
+			//Fix floating point errors by setting to fixed the on the same decimal as the stepValue.
+			for (var i = 1; i < numberOfSteps + 1; i++) {
+				labels.push(tmpl(labelTemplateString, {value: (graphMin + (stepValue * i)).toFixed(getDecimalPlaces(stepValue))}));
+			}
 		}
+	}
 	
 	//Max value from array
 	function Max( array ){
@@ -1933,42 +1900,42 @@ window.Chart = function(context){
 	
 	function mergeChartConfig(defaults,userDefined){
 		var returnObj = {};
-			for (var attrname in defaults) { returnObj[attrname] = defaults[attrname]; }
-			for (var attrname in userDefined) { returnObj[attrname] = userDefined[attrname]; }
-			return returnObj;
+		for (var attrname in defaults) { returnObj[attrname] = defaults[attrname]; }
+		for (var attrname in userDefined) { returnObj[attrname] = userDefined[attrname]; }
+		return returnObj;
 	}
 	
 	//Javascript micro templating by John Resig - source at http://ejohn.org/blog/javascript-micro-templating/
-		var cache = {};
-	 
-		function tmpl(str, data){
-			// Figure out if we're getting a template, or if we need to
-			// load the template - and be sure to cache the result.
-			var fn = !/\W/.test(str) ?
-				cache[str] = cache[str] ||
-					tmpl(document.getElementById(str).innerHTML) :
+	var cache = {};
+	
+	function tmpl(str, data){
+		// Figure out if we're getting a template, or if we need to
+		// load the template - and be sure to cache the result.
+		var fn = !/\W/.test(str) ?
+			cache[str] = cache[str] ||
+			tmpl(document.getElementById(str).innerHTML) :
 			 
-				// Generate a reusable function that will serve as a template
-				// generator (and which will be cached).
-				new Function("obj",
-					"var p=[],print=function(){p.push.apply(p,arguments);};" +
-				 
-					// Introduce the data as local variables using with(){}
-					"with(obj){p.push('" +
-				 
-					// Convert the template into pure JavaScript
-					str
-						.replace(/[\r\t\n]/g, " ")
-						.split("<%").join("\t")
-						.replace(/((^|%>)[^\t]*)'/g, "$1\r")
-						.replace(/\t=(.*?)%>/g, "',$1,'")
-						.split("\t").join("');")
-						.split("%>").join("p.push('")
-						.split("\r").join("\\'")
-				+ "');}return p.join('');");
-		 
-			// Provide some basic currying to the user
-			return data ? fn( data ) : fn;
+			// Generate a reusable function that will serve as a template
+			// generator (and which will be cached).
+			new Function("obj",
+				"var p=[],print=function(){p.push.apply(p,arguments);};" +
+			 
+				// Introduce the data as local variables using with(){}
+				"with(obj){p.push('" +
+			 
+				// Convert the template into pure JavaScript
+				str
+					.replace(/[\r\t\n]/g, " ")
+					.split("<%").join("\t")
+					.replace(/((^|%>)[^\t]*)'/g, "$1\r")
+					.replace(/\t=(.*?)%>/g, "',$1,'")
+					.split("\t").join("');")
+					.split("%>").join("p.push('")
+					.split("\r").join("\\'")
+			+ "');}return p.join('');");
+	 
+		// Provide some basic currying to the user
+		return data ? fn( data ) : fn;
 	 }
 }
 
