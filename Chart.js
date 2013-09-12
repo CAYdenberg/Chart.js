@@ -581,6 +581,8 @@ window.Chart = function(context){
 			outlierLabelFontColor : "#666",
 			outlierLabelPlacement : "right",  // left, top, bottom
 			outlierLabelMargin : 2,           // pixels. between label and dot
+			outlierDotStyle : 'disc',         // options: disc, circle
+			outlierDotFillColor : "#666",
 			outlierDotRadius : 2,             // pixels
 			outlierDotStrokeWidth : 2,        // pixels
 			outlierDotStrokeColor : "#666",
@@ -1616,6 +1618,10 @@ window.Chart = function(context){
 							ctx.beginPath();
 							ctx.arc(outlierDotX, outlierDotY, config.outlierDotRadius, 0, Math.PI*2);
 							ctx.stroke();
+							if (config.outlierDotStyle == "circle") {
+								ctx.fillStyle = config.outlierDotFillColor;
+								ctx.fill();
+							}
 							
 							if (config.outlierShowLabels) {
 								var outlierLabelX, outlierLabelY;
