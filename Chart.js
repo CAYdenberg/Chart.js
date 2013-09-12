@@ -1618,7 +1618,7 @@ window.Chart = function(context){
 							ctx.beginPath();
 							ctx.arc(outlierDotX, outlierDotY, config.outlierDotRadius, 0, Math.PI*2);
 							ctx.stroke();
-							if (config.outlierDotStyle == "circle") {
+							if (config.outlierDotStyle == "disc") {
 								ctx.fillStyle = config.outlierDotFillColor;
 								ctx.fill();
 							}
