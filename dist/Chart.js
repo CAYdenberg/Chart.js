@@ -7921,7 +7921,7 @@ module.exports = function(Chart) {
 			}
 
 			//draw lower error bar
-			if (this.errorDir !== "up") {
+			if (vm.direction !== "up") {
 				ctx.beginPath();
 				ctx.moveTo(vm.x, middle);
 				ctx.lineTo(vm.x, bottom);
